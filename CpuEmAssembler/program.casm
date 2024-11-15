@@ -1,0 +1,10 @@
+         MOV 0x00
+    MOV test
+
+label:
+test
+  # comment test
+
+  bruh
+
+MOV this is a test              #test test
