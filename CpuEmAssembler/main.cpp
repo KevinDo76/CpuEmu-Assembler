@@ -110,7 +110,10 @@ int main()
 
 	std::vector<token> tokenList;
 
-	Lexical::lexcialAnalyzer(tokenList, AsmCleanStringBuff[0]);
+	for (int i = 0; i < AsmCleanStringBuff.size(); i++)
+	{
+		lexer::lexcialAnalyzer(tokenList, AsmCleanStringBuff[i]);
+	}
 
 	return 0;
 }

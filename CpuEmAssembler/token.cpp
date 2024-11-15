@@ -6,21 +6,33 @@
 
 token::token(){}
 
-
-
-void Lexical::lexcialAnalyzer(std::vector<token>& tokenList, std::pair<unsigned int, std::string>line)
+void lexer::lexcialAnalyzer(std::vector<token>& tokenList, std::pair<unsigned int, std::string>line)
 {
 	std::string currentIngest = "";
+	bool textChunk = false;
+	bool textChunkEnded = false;
+	unsigned int wordIndex = 0;
 	for (int i=0;i<line.second.size();i++)
 	{
-		if (line.second[i] == ' ')
+		if (line.second[i] == '"')
+		{
+			textChunk = !textChunk;
+			if (!textChunk)
+			{
+				textChunkEnded = true;
+			}
+			continue;
+		}
+		if (line.second[i] == ' ' && !textChunk)
 		{
 			token Token;
 			std::cout << currentIngest << "\n";
-			if (convertToken(line.first, currentIngest, Token)) 
+			if (convertToken(line.first, wordIndex, textChunkEnded, currentIngest, Token))
 			{
 				tokenList.push_back(Token);
 			}
+			textChunkEnded = false;
+			wordIndex++;
 			currentIngest = "";
 			continue;
 		}
@@ -28,20 +40,20 @@ void Lexical::lexcialAnalyzer(std::vector<token>& tokenList, std::pair<unsigned 
 	}
 	std::cout << currentIngest << "\n";
 	token Token;
-	if (convertToken(line.first, currentIngest, Token))
+	if (convertToken(line.first, wordIndex, textChunkEnded, currentIngest, Token))
 	{
 		tokenList.push_back(Token);
 	}
 }
 
-bool Lexical::convertToken(unsigned int lineNumber, std::string word, token& returnToken)
+bool lexer::convertToken(unsigned int lineNumber, unsigned int wordIndex, bool inTextChunk, std::string word, token& returnToken)
 {
 	returnToken.lineNumber = lineNumber;
 	if (word.size() == 0)
 	{
 		return false;
 	}
-	if (word[word.size() - 2] == ':')
+	if (word[word.size() - 1] == ':')
 	{
 		returnToken.type = token::tokenType::label;
 		returnToken.dataT = token::dataType::string;
@@ -56,14 +68,28 @@ bool Lexical::convertToken(unsigned int lineNumber, std::string word, token& ret
 		returnToken.intData = hex2int(word);
 		return true;
 	}
-	returnToken.type = token::tokenType::instruction;
+	if (inTextChunk || word[word.size() - 1] == '"')
+	{
+		returnToken.type = token::tokenType::stringChunk;
+		returnToken.dataT = token::dataType::string;
+		returnToken.stringData = word;
+		return true;
+	}
+	if (wordIndex == 0)
+	{
+		returnToken.type = token::tokenType::instruction;
+		returnToken.dataT = token::dataType::string;
+		returnToken.stringData = word;
+		return true;
+	}
+	returnToken.type = token::tokenType::label;
 	returnToken.dataT = token::dataType::string;
 	returnToken.stringData = word;
 	return true;
 }
 
 
-void Lexical::santizeHex(std::string& word)
+void lexer::santizeHex(std::string& word)
 {
 	std::string output = "";
 	bool inZeroPadding = true;
@@ -105,7 +131,7 @@ void Lexical::santizeHex(std::string& word)
 
 
 
-char Lexical::hex2char(char n)
+char lexer::hex2char(char n)
 {
 	n = (n > 70) ? n - 32 : n;
 
@@ -119,7 +145,7 @@ char Lexical::hex2char(char n)
 	}
 }
 
-uint32_t Lexical::hex2int(std::string n)
+uint32_t lexer::hex2int(std::string n)
 {
 	uint32_t number = 0;
 	for (int i = 0; i < n.size(); i++)

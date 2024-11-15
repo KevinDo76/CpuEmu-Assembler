@@ -7,6 +7,7 @@ public:
 		instruction,
 		label,
 		oprand,
+		stringChunk,
 	};
 
 	enum dataType {
@@ -26,9 +27,9 @@ public:
 
 
 
-namespace Lexical {
+namespace lexer {
 	void lexcialAnalyzer(std::vector<token>& tokenList, std::pair<unsigned int, std::string>line);
-	bool convertToken(unsigned int lineNumber, std::string word, token& returnToken);
+	bool convertToken(unsigned int lineNumber, unsigned int wordIndex, bool inTextChunk, std::string word, token& returnToken);
 	void santizeHex(std::string& word);
 	char hex2char(char n);
 	uint32_t hex2int(std::string n);

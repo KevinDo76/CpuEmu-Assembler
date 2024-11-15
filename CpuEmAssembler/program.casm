@@ -7,4 +7,4 @@ test
 
   bruh
 
-MOV this is a test              #test test
+MOV "this is a test" "second chunk" label_Test  "more" "a"            #test test
