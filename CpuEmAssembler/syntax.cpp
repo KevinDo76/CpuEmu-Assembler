@@ -3,16 +3,11 @@
 #include <fstream>
 #include <sstream>
 
-bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath)
+bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath, std::stringstream& errorStream)
 {
     std::vector<syntaxBlock> instructionList;
     std::vector<syntaxBlock> labelList;
-
-    std::ofstream binaryFile(BinaryFilePath, std::ios::out | std::ios::binary | std::ios::trunc);
-    if (!binaryFile.is_open())
-    {
-        return false;
-    }
+    bool errorFound = false;
 
     for (unsigned int i = 0; i < tokenList.size(); i++)
     {
@@ -22,11 +17,13 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath)
             std::string error;
             if (!createInstructionSyntaxBlock(instructionBlock, tokenList, i, error))
             {
-                std::cout << error << "\n";
+                errorStream << error << "\n";
+                errorFound = true;
                 continue;
             }
             instructionList.push_back(instructionBlock);
         }
+
         if (tokenList[i].type == token::tokenType::label)
         {
             syntaxBlock labelBlock;
@@ -42,6 +39,11 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath)
         }
     }
 
+    if (errorFound)
+    {
+        return false;
+    }
+
     uint32_t memorySize = mapSyntaxBlockToMemory(instructionList);
     char* memoryBuff = new char[memorySize] {0};
     for (int i = 0; i < instructionList.size(); i++)
@@ -51,6 +53,7 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath)
             labelList.push_back(instructionList[i]);
         }
     }
+
     //creating label entries for registers
     syntaxBlock registerLabel;
     registerLabel.instruction = "ra";
@@ -87,7 +90,7 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath)
                         memoryBuff[startAddress + offset] = instructionList[i].oprands[oprandIndex].stringData[stringIndex];
                         offset++;
                     }
-                }
+                }  
                 if (instructionList[i].oprands[oprandIndex].dataT == token::dataType::hex) 
                 {
                     memoryBuff[startAddress + offset] = (char)instructionList[i].oprands[oprandIndex].intData;
@@ -99,7 +102,8 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath)
 
         if (!AssembleFromSyntaxBlock(instructionList[i], labelList, assembledBytes, error))
         {
-            std::cout << error << "\n";
+            errorStream << error << "\n";
+            errorFound = true;
             continue;
         }
        
@@ -108,6 +112,19 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath)
             memoryBuff[startAddress + j*0x04] = assembledBytes[j];
         }
     }
+
+    if (errorFound)
+    {
+        return false;
+    }
+
+    std::ofstream binaryFile(BinaryFilePath, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!binaryFile.is_open())
+    {
+        errorStream << "Unable to open file path\"" << BinaryFilePath << "\"\n";
+        return false;
+    }
+
     binaryFile.write(memoryBuff, memorySize);
     binaryFile.close();
     delete[] memoryBuff;
@@ -205,7 +222,7 @@ bool syntax::AssembleFromSyntaxBlock(syntaxBlock& syntaxObj, std::vector<syntaxB
 
     for (int i = 0; i < syntaxObj.oprands.size(); i++)
     {
-        std::cout << syntaxObj.instruction << "\n";
+        //std::cout << syntaxObj.instruction << "\n";
 
         if (syntaxObj.oprands[i].type == token::tokenType::inlineLabel)
         {
@@ -221,7 +238,9 @@ bool syntax::AssembleFromSyntaxBlock(syntaxBlock& syntaxObj, std::vector<syntaxB
             }
             if (!found)
             {
-                error = "Unknown label \"" + syntaxObj.oprands[i].stringData+"\"";
+                std::stringstream returnError;
+                returnError << "Unknown label, \"" + syntaxObj.oprands[i].stringData + "\", on line " << syntaxObj.lineNumber;
+                error = returnError.str();
                 return false;
             }
             continue;
@@ -241,6 +260,7 @@ bool syntax::createInstructionSyntaxBlock(syntaxBlock& syntaxObj, std::vector<to
     syntaxObj.isLabel = false;
     errorStream << "Invalid oprands: wrong count, on line " << tokenList[instructionIndex].lineNumber;
     error = errorStream.str();
+    syntaxObj.lineNumber = tokenList[instructionIndex].lineNumber;
     if (checkValidInstructionToken(instructionName, tokenList, instructionIndex, syntaxObj))
     {
         error = "";

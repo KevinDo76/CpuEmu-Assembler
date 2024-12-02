@@ -5,7 +5,7 @@ loopstart:
 	out ra 0x0 # output ra to tty
 	mov ra 0x1 # set ra to 1
 	add rb rb ra #increment rb with ra
-	jmpimm loopstart # jump back to start
+	jmpimm loopstarts # jump back to start
 
 string_message:
-	string "Hello world!"a 0x0
+	string "Hello world!" 0x0

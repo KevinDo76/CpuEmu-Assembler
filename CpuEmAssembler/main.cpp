@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "assembler.h"
+#include <sstream>
 
 int main()
 {
@@ -27,7 +28,12 @@ int main()
 		}
 	}
 
-	syntax::Assemble(tokenList, binaryOutputFilePath);
+	std::stringstream errorStream;
+	if (!syntax::Assemble(tokenList, binaryOutputFilePath, errorStream))
+	{
+		std::cout << errorStream.str();
+		std::cout << "Failed to assemble\n";
+	}
 
 	return 0;
 }

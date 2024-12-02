@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <sstream>
 class token
 {
 public:
@@ -32,6 +33,7 @@ public:
 class syntaxBlock
 {
 public:
+	uint32_t lineNumber;
 	bool isLabel;
 	std::string instruction;
 	std::vector<token> oprands;
@@ -45,9 +47,10 @@ namespace syntax {
 	bool checkValidInstructionToken(std::string instructionName, std::vector<token>& tokenList, unsigned int& instructionIndex, syntaxBlock& syntaxObj);
 	bool createInstructionSyntaxBlock(syntaxBlock& syntaxObj, std::vector<token>& tokenList, unsigned int& instructionIndex, std::string& error);
 	bool checkOprand(std::vector<token>, unsigned int instructionIndex, unsigned int oprandCount, syntaxBlock& syntaxObj);
-	bool Assemble(std::vector<token>& tokenList, std::string BinaryFilePath);
 	void toLowerCase(std::string& word);
 	uint32_t flipEndian(uint32_t n);
+
+	bool Assemble(std::vector<token>& tokenList, std::string BinaryFilePath, std::stringstream& error);
 }
 
 namespace lexer {
