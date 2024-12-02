@@ -127,14 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="token.cpp" />
+    <ClCompile Include="lexer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="syntax.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="program.casm" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="token.h" />
+    <ClInclude Include="assembler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

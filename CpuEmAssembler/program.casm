@@ -1,10 +1,11 @@
-         MOV 0x00
-    MOV test
+start:
+	mov rb string_message #put the address of the message into rb
+loopstart:
+	readptr1 ra rb #read character from address in rb into ra
+	out ra 0x0 # output ra to tty
+	mov ra 0x1 # set ra to 1
+	add rb rb ra #increment rb with ra
+	jmpimm loopstart # jump back to start
 
-label:
-test
-  # comment test
-
-  bruh
-
-MOV "this is a test" "second chunk" label_Test  "more" "a"            #test test
+string_message:
+	string "Hello world!"a 0x0
