@@ -1,11 +1,30 @@
+jmpimm start
+
+string_message:
+	string "Hello world!" 0
+
+string_message2:
+	string 10 "Thsi is another piece of text teheheh :)" 0
+
+
 start:
 	mov rb string_message #put the address of the message into rb
+	mov cmpreg 0x1
+	mov bp 0x250
+	mov sp 0x250
+
 loopstart:
+	mov rd 0
 	readptr1 ra rb #read character from address in rb into ra
+	cmp rd ra rd
 	out ra 0x0 # output ra to tty
 	mov ra 0x1 # set ra to 1
 	add rb rb ra #increment rb with ra
-	jmpimm loopstarts # jump back to start
 
-string_message:
-	string "Hello world!" 0x0
+	mov ra loopstart
+	jmpif rd ra
+
+	mov rb string_message2
+	jmpimm loopstart
+
+	halt

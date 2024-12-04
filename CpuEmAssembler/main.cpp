@@ -8,7 +8,7 @@
 int main()
 {
 	std::string assemblyFilePath = "program.casm";
-	std::string binaryOutputFilePath = "program.bin";
+	std::string binaryOutputFilePath = "C:\\Users\\quand\\source\\repos\\KevinDo76\\cpuEmu\\cpuEmu\\program.bin";
 	std::vector<std::string> AsmStringBuff;
 	std::vector<std::pair<unsigned int, std::string>> AsmCleanStringBuff;
 

@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 
+#define FORCE_INSTRUCTION_ALIGNMENT 0
+
 bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath, std::stringstream& errorStream)
 {
     std::vector<syntaxBlock> instructionList;
@@ -66,6 +68,18 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath,
     registerLabel.instruction = "rc";
     registerLabel.memoryAddress = 0x2;
     labelList.push_back(registerLabel);
+    registerLabel.instruction = "rd";
+    registerLabel.memoryAddress = 0x3;
+    labelList.push_back(registerLabel);
+    registerLabel.instruction = "cmpreg";
+    registerLabel.memoryAddress = 0x4;
+    labelList.push_back(registerLabel);
+    registerLabel.instruction = "sp";
+    registerLabel.memoryAddress = 0x5;
+    labelList.push_back(registerLabel);
+    registerLabel.instruction = "bp";
+    registerLabel.memoryAddress = 0x6;
+    labelList.push_back(registerLabel);
 
     for (int i = 0; i < instructionList.size(); i++)
     {
@@ -96,6 +110,11 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath,
                     memoryBuff[startAddress + offset] = (char)instructionList[i].oprands[oprandIndex].intData;
                     offset++;
                 }
+                if (instructionList[i].oprands[oprandIndex].dataT == token::dataType::integer)
+                {
+                    memoryBuff[startAddress + offset] = (char)instructionList[i].oprands[oprandIndex].intData;
+                    offset++;
+                }
             }
             continue;
         }
@@ -106,10 +125,15 @@ bool syntax::Assemble(std::vector<token>& tokenList, std::string BinaryFilePath,
             errorFound = true;
             continue;
         }
-       
+        
         for (int j = 0; j < 4; j++)
         {
-            memoryBuff[startAddress + j*0x04] = assembledBytes[j];
+            
+            //((uint32_t* )memoryBuff)[(startAddress/4) + j] = assembledBytes[j];
+            memoryBuff[startAddress + j * 0x04 + 0] = assembledBytes[j] & 0xff;
+            memoryBuff[startAddress + j * 0x04 + 1] = (assembledBytes[j] & 0xff00) >> 8;
+            memoryBuff[startAddress + j * 0x04 + 2] = (assembledBytes[j] & 0xff0000) >> 16;
+            memoryBuff[startAddress + j * 0x04 + 3] = (assembledBytes[j] & 0xff000000) >> 24;
         }
     }
 
@@ -153,12 +177,16 @@ uint32_t syntax::mapSyntaxBlockToMemory(std::vector<syntaxBlock>& instructionLis
                 {
                     dataBlockSize++;
                 }
+                if (instructionList[i].oprands[oprandsIndex].dataT == token::dataType::integer)
+                {
+                    dataBlockSize++;
+                }
             }
             memoryCounter += dataBlockSize;
             continue;
         }
         
-        if (memoryCounter % 0x10 != 0)
+        if (memoryCounter % 0x10 != 0 && FORCE_INSTRUCTION_ALIGNMENT)
         {
             memoryCounter = memoryCounter - (memoryCounter % 0x10) + 0x10;
         }
@@ -175,7 +203,7 @@ uint32_t syntax::mapSyntaxBlockToMemory(std::vector<syntaxBlock>& instructionLis
 
 bool syntax::checkValidInstructionToken(std::string instructionName, std::vector<token>& tokenList, unsigned int& instructionIndex, syntaxBlock& syntaxObj)
 {
-    const std::pair<std::string, unsigned int> INSTRUCTION_LIST[] = { {"mov",2}, {"out",2}, {"add", 3}, {"readptr1", 2}, {"jmpimm", 1} };
+    const std::pair<std::string, unsigned int> INSTRUCTION_LIST[] = { {"mov",2}, {"out",2}, {"add", 3}, {"readptr1", 2}, {"jmpimm", 1},{"jmpif",2}, {"cmp",3}, {"halt",0} };
     for (int i = 0; i < sizeof INSTRUCTION_LIST / sizeof INSTRUCTION_LIST[0]; i++)
     {
         if (instructionName == "string")
@@ -207,6 +235,9 @@ uint32_t syntax::getInstructionCodeFromName(std::string name)
     if (name == "out") { return 0x20; }
     if (name == "add") { return 0x11; }
     if (name == "readptr1") { return 0x0a; }
+    if (name == "jmpif") { return 0x1d; }
+    if (name == "cmp") { return 0x1a; }
+    if (name == "halt") { return 0x23; }
     return 0;
 }
 
