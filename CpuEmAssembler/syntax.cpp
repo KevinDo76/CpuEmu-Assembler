@@ -203,7 +203,8 @@ uint32_t syntax::mapSyntaxBlockToMemory(std::vector<syntaxBlock>& instructionLis
 
 bool syntax::checkValidInstructionToken(std::string instructionName, std::vector<token>& tokenList, unsigned int& instructionIndex, syntaxBlock& syntaxObj)
 {
-    const std::pair<std::string, unsigned int> INSTRUCTION_LIST[] = { {"mov",2}, {"out",2}, {"add", 3}, {"readptr1", 2}, {"jmpimm", 1},{"jmpif",2}, {"cmp",3}, {"halt",0} };
+    const std::pair<std::string, unsigned int> INSTRUCTION_LIST[] = { {"mov",2}, {"out",2}, {"add", 2}, {"and", 2}, {"xor", 2}, {"sub", 2}, {"or", 2}, {"readptr1", 2}, {"jmpimm", 1},{"jmpif",2}, {"cmp",3}, {"halt",0}, {"ret",0}, {"call", 1}, {"push", 1}, {"pop", 1}, {"inc", 1}, {"dec", 1}, {"pushreg", 0}, {"popreg", 0} };
+
     for (int i = 0; i < sizeof INSTRUCTION_LIST / sizeof INSTRUCTION_LIST[0]; i++)
     {
         if (instructionName == "string")
@@ -238,6 +239,15 @@ uint32_t syntax::getInstructionCodeFromName(std::string name)
     if (name == "jmpif") { return 0x1d; }
     if (name == "cmp") { return 0x1a; }
     if (name == "halt") { return 0x23; }
+    if (name == "ret") { return 0x2; }
+    if (name == "call") { return 0x1; }
+    if (name == "pop") { return 0x03; }
+    if (name == "push") { return 0x04; }
+    if (name == "inc") { return 0x24; }
+    if (name == "dec") { return 0x25; }
+    if (name == "pushreg") { return 0x26; }
+    if (name == "popreg") { return 0x27; }
+
     return 0;
 }
 

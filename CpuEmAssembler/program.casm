@@ -1,30 +1,42 @@
-jmpimm start
-
-string_message:
-	string "Hello world!" 0
-
-string_message2:
-	string 10 "Thsi is another piece of text teheheh :)" 0
-
-
 start:
-	mov rb string_message #put the address of the message into rb
-	mov cmpreg 0x1
+	#setting up the stack
+	mov sp 0
 	mov bp 0x250
-	mov sp 0x250
 
-loopstart:
-	mov rd 0
-	readptr1 ra rb #read character from address in rb into ra
-	cmp rd ra rd
-	out ra 0x0 # output ra to tty
-	mov ra 0x1 # set ra to 1
-	add rb rb ra #increment rb with ra
-
-	mov ra loopstart
-	jmpif rd ra
-
-	mov rb string_message2
-	jmpimm loopstart
+	#start
+	mov ra message
+	call print
+	call print
+	mov ra message2
+	call print
 
 	halt
+
+# address of the message in ra
+print:
+	pushreg
+.print_loop:
+	mov cmpreg 0
+	mov rc 0
+
+	readptr1 rb ra
+	out rb 0
+
+	cmp rb rb rc
+	mov rc .print_done
+	jmpif rb rc
+
+	inc ra
+	jmpimm .print_loop
+
+.print_done:
+	popreg
+	ret
+
+
+
+
+message2:
+	string "no zero test! THIS TEXT IS MUCH LONGER AKSDJAKSDJAKJD  THIS TEXT IS MUCH LONGER AKSDJAKSDJAKJD  THIS TEXT IS MUCH LONGER AKSDJAKSDJAKJD  THIS TEXT IS MUCH LONGER AKSDJAKSDJAKJD  THIS TEXT IS MUCH LONGER AKSDJAKSDJAKJD  THIS TEXT IS MUCH LONGER AKSDJAKSDJAKJD  THIS TEXT IS MUCH LONGER AKSDJAKSDJAKJD" 
+message:
+	string "Hello World!" 10 0
